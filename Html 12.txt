@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پرسیار و وەڵام - پۆلی ١٢</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @font-face {
+            font-family: 'NRT Reg';
+            src: url('https://fonts.cdnfonts.com/css/nrt-reg') format('woff2');
+        }
+        
+        body {
+            font-family: 'NRT Reg', sans-serif;
+            background-color: #f5f7fa;
+        }
+        
+        .chem-bg {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .phys-bg {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .math-bg {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .question-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .correct-answer {
+            animation: correctAnimation 0.5s ease;
+        }
+        
+        @keyframes correctAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-indigo-900 text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold">پرسیار و وەڵام</h1>
+                <div class="flex space-x-4">
+                    <button id="addQuestionBtn" class="bg-white text-indigo-900 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition">
+                        <i class="fas fa-plus mr-2"></i> پرسیار زیاد بکە
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Subject Tabs -->
+        <div class="flex flex-wrap justify-center mb-8 gap-4">
+            <button id="chemTab" class="subject-tab chem-bg text-white px-6 py-3 rounded-lg text-xl font-bold shadow-md hover:shadow-lg transition active">
+                <i class="fas fa-flask mr-2"></i> کیمیا
+            </button>
+            <button id="physTab" class="subject-tab phys-bg text-white px-6 py-3 rounded-lg text-xl font-bold shadow-md hover:shadow-lg transition">
+                <i class="fas fa-atom mr-2"></i> فیزیا
+            </button>
+            <button id="mathTab" class="subject-tab math-bg text-white px-6 py-3 rounded-lg text-xl font-bold shadow-md hover:shadow-lg transition">
+                <i class="fas fa-square-root-alt mr-2"></i> بیرکاری
+            </button>
+        </div>
+
+        <!-- Questions Container -->
+        <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Questions will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Add Question Modal -->
+    <div id="addQuestionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">پرسیاری نوێ زیاد بکە</h2>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="questionForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">ناو:</label>
+                    <input type="text" id="userName" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">بابەت:</label>
+                    <select id="subjectSelect" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <option value="chem">کیمیا</option>
+                        <option value="phys">فیزیا</option>
+                        <option value="math">بیرکاری</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">پرسیار:</label>
+                    <textarea id="questionText" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">وەڵامی ڕاست:</label>
+                    <select id="correctAnswer" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">A:</label>
+                        <input type="text" id="optionA" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">B:</label>
+                        <input type="text" id="optionB" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">C:</label>
+                        <input type="text" id="optionC" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">D:</label>
+                        <input type="text" id="optionD" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+                    <i class="fas fa-paper-plane mr-2"></i> ناردن
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="successNotification" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center hidden">
+        <i class="fas fa-check-circle mr-2 text-xl"></i>
+        <span>پرسیارەکەت بە سەرکەوتوویی نێردرا!</span>
+    </div>
+
+    <script>
+        // Sample questions data
+        const questions = {
+            chem: [
+                {
+                    id: 1,
+                    question: "کیمیای سەرەتایی لە چی پێکهاتووە؟",
+                    options: {
+                        A: "پرۆتۆن و نیوترۆن",
+                        B: "ئەتۆم و گەردیلە",
+                        C: "مولیکول و ئایۆن",
+                        D: "هایدرۆجین و هێلیۆم"
+                    },
+                    correctAnswer: "B",
+                    askedBy: "عەلی محەممەد",
+                    color: "blue"
+                },
+                {
+                    id: 2,
+                    question: "پێکهاتەی ئاو چییە؟",
+                    options: {
+                        A: "H2O",
+                        B: "CO2",
+                        C: "NaCl",
+                        D: "O2"
+                    },
+                    correctAnswer: "A",
+                    askedBy: "سارا عەبدوڵڵا",
+                    color: "green"
+                }
+            ],
+            phys: [
+                {
+                    id: 1,
+                    question: "خێرایی ڕووناکی چەندە؟",
+                    options: {
+                        A: "300,000 km/s",
+                        B: "150,000 km/s",
+                        C: "450,000 km/s",
+                        D: "600,000 km/s"
+                    },
+                    correctAnswer: "A",
+                    askedBy: "حەسەن قادر",
+                    color: "purple"
+                },
+                {
+                    id: 2,
+                    question: "یاسای نیوتن لەسەر چییە؟",
+                    options: {
+                        A: "جوڵە",
+                        B: "کار و وزە",
+                        C: "پەستان",
+                        D: "گەرمی"
+                    },
+                    correctAnswer: "A",
+                    askedBy: "نەوزاد عەلی",
+                    color: "pink"
+                }
+            ],
+            math: [
+                {
+                    id: 1,
+                    question: "2 + 2 چەندە؟",
+                    options: {
+                        A: "3",
+                        B: "4",
+                        C: "5",
+                        D: "6"
+                    },
+                    correctAnswer: "B",
+                    askedBy: "ئارام کەریم",
+                    color: "teal"
+                },
+                {
+                    id: 2,
+                    question: "ڕیگەی x² + 2x + 1 = 0 چییە؟",
+                    options: {
+                        A: "1",
+                        B: "-1",
+                        C: "0",
+                        D: "2"
+                    },
+                    correctAnswer: "B",
+                    askedBy: "دیلان عەباس",
+                    color: "emerald"
+                }
+            ]
+        };
+
+        // Load questions from localStorage if available
+        function loadFromStorage() {
+            const savedQuestions = localStorage.getItem('savedQuestions');
+            if (savedQuestions) {
+                return JSON.parse(savedQuestions);
+            }
+            return null;
+        }
+
+        // Save questions to localStorage
+        function saveToStorage(questions) {
+            localStorage.setItem('savedQuestions', JSON.stringify(questions));
+        }
+
+        // Initialize with saved questions if they exist
+        const savedQuestions = loadFromStorage();
+        if (savedQuestions) {
+            Object.assign(questions, savedQuestions);
+        }
+
+        // Current active subject
+        let currentSubject = 'chem';
+
+        // DOM Elements
+        const chemTab = document.getElementById('chemTab');
+        const physTab = document.getElementById('physTab');
+        const mathTab = document.getElementById('mathTab');
+        const questionsContainer = document.getElementById('questionsContainer');
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        const addQuestionModal = document.getElementById('addQuestionModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const questionForm = document.getElementById('questionForm');
+        const successNotification = document.getElementById('successNotification');
+
+        // Initialize the app
+        function init() {
+            loadQuestions(currentSubject);
+            setupEventListeners();
+        }
+
+        // Load questions for a subject
+        function loadQuestions(subject) {
+            const savedQuestions = loadFromStorage();
+            if (savedQuestions) {
+                Object.assign(questions, savedQuestions);
+            }
+            questionsContainer.innerHTML = '';
+            
+            questions[subject].forEach(q => {
+                const questionCard = createQuestionCard(q, subject);
+                questionsContainer.appendChild(questionCard);
+            });
+        }
+
+        // Create a question card element
+        function createQuestionCard(q, subject) {
+            const card = document.createElement('div');
+            card.className = `question-card bg-white rounded-xl overflow-hidden shadow-md relative ${subject}-bg`;
+            
+            let subjectColorClass = '';
+            if (subject === 'chem') subjectColorClass = 'border-blue-500';
+            else if (subject === 'phys') subjectColorClass = 'border-purple-500';
+            else subjectColorClass = 'border-green-500';
+            
+            card.innerHTML = `
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="px-3 py-1 bg-white bg-opacity-20 text-white rounded-full text-sm font-medium">${getSubjectName(subject)}</span>
+                        <span class="text-white text-opacity-80 text-sm">لەلایەن: ${q.askedBy}</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">${q.question}</h3>
+                    <div class="space-y-3">
+                        <button data-answer="A" class="w-full text-left bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">A: ${q.options.A}</button>
+                        <button data-answer="B" class="w-full text-left bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">B: ${q.options.B}</button>
+                        <button data-answer="C" class="w-full text-left bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">C: ${q.options.C}</button>
+                        <button data-answer="D" class="w-full text-left bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">D: ${q.options.D}</button>
+                    </div>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 ${subjectColorClass}"></div>
+            `;
+            
+            // Add click event to answer buttons
+            const answerButtons = card.querySelectorAll('button[data-answer]');
+            answerButtons.forEach(btn => {
+                btn.addEventListener('click', () => checkAnswer(btn, q.correctAnswer, card));
+            });
+            
+            return card;
+        }
+
+        // Check if the selected answer is correct
+        function checkAnswer(button, correctAnswer, card) {
+            const selectedAnswer = button.getAttribute('data-answer');
+            const answerButtons = card.querySelectorAll('button[data-answer]');
+            
+            // Disable all buttons
+            answerButtons.forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            // Mark correct and wrong answers
+            answerButtons.forEach(btn => {
+                if (btn.getAttribute('data-answer') === correctAnswer) {
+                    btn.classList.add('bg-green-500', 'bg-opacity-100');
+                    btn.innerHTML += ' <i class="fas fa-check"></i>';
+                } else if (btn.getAttribute('data-answer') === selectedAnswer && selectedAnswer !== correctAnswer) {
+                    btn.classList.add('bg-red-500', 'bg-opacity-100');
+                    btn.innerHTML += ' <i class="fas fa-times"></i>';
+                }
+            });
+            
+            // If answer is correct, show celebration
+            if (selectedAnswer === correctAnswer) {
+                card.classList.add('correct-answer');
+                createConfetti(card);
+            }
+        }
+
+        // Create confetti effect
+        function createConfetti(element) {
+            const rect = element.getBoundingClientRect();
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${rect.left + Math.random() * rect.width}px`;
+                confetti.style.top = `${rect.top}px`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                document.body.appendChild(confetti);
+                
+                // Animate confetti
+                setTimeout(() => {
+                    confetti.style.opacity = '1';
+                    confetti.style.top = `${rect.top - 200 + Math.random() * 400}px`;
+                    confetti.style.left = `${rect.left + (Math.random() - 0.5) * 200}px`;
+                    confetti.style.transition = `all ${1 + Math.random() * 2}s ease-out`;
+                    
+                    // Remove confetti after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 2000);
+                }, 0);
+            }
+        }
+
+        // Get subject name in Kurdish
+        function getSubjectName(subject) {
+            if (subject === 'chem') return 'کیمیا';
+            if (subject === 'phys') return 'فیزیا';
+            return 'بیرکاری';
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Subject tab clicks
+            chemTab.addEventListener('click', () => {
+                currentSubject = 'chem';
+                loadQuestions(currentSubject);
+                updateActiveTab();
+            });
+            
+            physTab.addEventListener('click', () => {
+                currentSubject = 'phys';
+                loadQuestions(currentSubject);
+                updateActiveTab();
+            });
+            
+            mathTab.addEventListener('click', () => {
+                currentSubject = 'math';
+                loadQuestions(currentSubject);
+                updateActiveTab();
+            });
+            
+            // Add question modal
+            addQuestionBtn.addEventListener('click', () => {
+                addQuestionModal.classList.remove('hidden');
+            });
+            
+            closeModalBtn.addEventListener('click', () => {
+                addQuestionModal.classList.add('hidden');
+            });
+            
+            // Form submission
+            questionForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Get form values
+                const userName = document.getElementById('userName').value;
+                const subject = document.getElementById('subjectSelect').value;
+                const questionText = document.getElementById('questionText').value;
+                const correctAnswer = document.getElementById('correctAnswer').value;
+                const optionA = document.getElementById('optionA').value;
+                const optionB = document.getElementById('optionB').value;
+                const optionC = document.getElementById('optionC').value;
+                const optionD = document.getElementById('optionD').value;
+                
+                // Create new question object
+                const newQuestion = {
+                    id: questions[subject].length + 1,
+                    question: questionText,
+                    options: {
+                        A: optionA,
+                        B: optionB,
+                        C: optionC,
+                        D: optionD
+                    },
+                    correctAnswer: correctAnswer,
+                    askedBy: userName,
+                    color: getRandomColor()
+                };
+                
+                // Add to questions array
+                questions[subject].push(newQuestion);
+                
+                // Reset form
+                questionForm.reset();
+                
+                // Close modal
+                addQuestionModal.classList.add('hidden');
+                
+                // Show success notification
+                successNotification.classList.remove('hidden');
+                setTimeout(() => {
+                    successNotification.classList.add('hidden');
+                }, 3000);
+                
+                // Reload questions if current subject matches
+                if (currentSubject === subject) {
+                    loadQuestions(currentSubject);
+                }
+                
+                // Save the updated questions
+                saveToStorage(questions);
+            });
+        }
+
+        // Update active tab styling
+        function updateActiveTab() {
+            [chemTab, physTab, mathTab].forEach(tab => tab.classList.remove('active'));
+            
+            if (currentSubject === 'chem') chemTab.classList.add('active');
+            else if (currentSubject === 'phys') physTab.classList.add('active');
+            else mathTab.classList.add('active');
+        }
+
+        // Get random color for new questions
+        function getRandomColor() {
+            const colors = ['red', 'blue', 'green', 'purple', 'pink', 'teal', 'emerald'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Save questions whenever they're modified
+        function saveQuestions() {
+            saveToStorage(questions);
+        }
+
+        // Initialize the app
+        init();
+    </script>
+    
+    <!-- Footer -->
+<footer class="bg-indigo-900 text-gray-300 py-6 mt-16 shadow-inner">
+    <div class="container mx-auto px-4 text-center">
+        <p class="text-sm md:text-base">
+            &copy; 2025 هەموو مافەکان پارێزراون 
+            <span class="font-bold text-white">Paul Apache</span>
+        </p>
+    </div>
+</footer>
+</body>
+
+</html>
+
+</html>
+
+</body>
+</html>
